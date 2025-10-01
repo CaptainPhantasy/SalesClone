@@ -1,0 +1,57 @@
+{
+  "name": "legacyai-voice-agent",
+  "version": "1.0.0",
+  "description": "LegacyAI Voice Agent System - Multi-agent AI voice telephony platform",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:integration": "jest --testMatch='**/__tests__/integration/**/*.test.js'",
+    "lint": "eslint src/ __tests__/",
+    "lint:fix": "eslint src/ __tests__/ --fix",
+    "migrate": "node database/migrations/run-migrations.js"
+  },
+  "keywords": [
+    "ai",
+    "voice",
+    "telephony",
+    "twilio",
+    "openai",
+    "claude",
+    "multi-agent",
+    "legacyai"
+  ],
+  "author": "LegacyAI Team",
+  "license": "MIT",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.1",
+    "@clerk/clerk-sdk-node": "^5.0.50",
+    "@supabase/supabase-js": "^2.45.7",
+    "bullmq": "^5.28.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "ioredis": "^5.4.2",
+    "mailgun-js": "^0.22.0",
+    "openai": "^4.77.3",
+    "twilio": "^5.3.7",
+    "uuid": "^11.0.5",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/legacyai/voice-agent-system.git"
+  }
+}
