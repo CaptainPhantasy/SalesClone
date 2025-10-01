@@ -1,0 +1,141 @@
+# @fileoverview Docker Compose configuration for LegacyAI Voice Agent System
+# @author LegacyAI Subagent Fleet - Deployment Agent
+# @created 2025-10-01T19:00:00Z
+# @lastModified 2025-10-01T19:00:00Z
+#
+# Multi-container orchestration:
+# - voice-app: Main Node.js application
+# - nginx: Reverse proxy with SSL/TLS support
+# - Networks: Isolated internal network for services
+# - Volumes: Persistent storage for logs and recordings
+
+version: '3.8'
+
+services:
+  # Main Voice Application Service
+  voice-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+
+    container_name: legacyai-voice-app
+
+    # Port mappings: host:container
+    ports:
+      - "3000:3000"  # HTTP/API server
+      - "3001:3001"  # WebSocket server
+
+    # Environment configuration
+    environment:
+      NODE_ENV: production
+      # Override ports if needed
+      PORT: 3000
+      WEBSOCKET_PORT: 3001
+
+    # Load environment variables from .env file
+    # IMPORTANT: Never commit .env file to version control
+    env_file:
+      - .env
+
+    # Restart policy: restart unless explicitly stopped
+    restart: unless-stopped
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Persistent volumes for data
+    volumes:
+      # Mount host directories for logs and recordings
+      # Enables persistence across container restarts
+      - ./logs:/app/logs
+      - ./recordings:/app/recordings
+
+    # Network configuration
+    networks:
+      - voice-network
+
+    # Resource limits (optional, recommended for production)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Nginx Reverse Proxy Service
+  # Optional: Use for SSL/TLS termination and load balancing
+  nginx:
+    image: nginx:alpine
+
+    container_name: legacyai-nginx
+
+    # Port mappings
+    ports:
+      - "80:80"    # HTTP
+      - "443:443"  # HTTPS
+
+    # Volume mounts for configuration and SSL certificates
+    volumes:
+      # Nginx configuration file
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      # SSL certificates (create this directory and add your certs)
+      - ./ssl:/etc/nginx/ssl:ro
+      # Static files (optional)
+      - ./public:/usr/share/nginx/html:ro
+
+    # Depends on voice-app service
+    depends_on:
+      voice-app:
+        condition: service_healthy
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Network configuration
+    networks:
+      - voice-network
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+# Network configuration
+networks:
+  voice-network:
+    driver: bridge
+    # Optional: Define custom network settings
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Volume definitions (optional: use for named volumes)
+volumes:
+  logs:
+    driver: local
+  recordings:
+    driver: local
